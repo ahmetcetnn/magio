@@ -113,10 +113,10 @@ export default function SignUpPage() {
   if (redirecting) return null;
 
   return (
-    <div className="min-h-screen flex bg-white">
+  <div className="min-h-screen flex bg-white">
       
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20">
-        <div className="mb-12 lg:mb-16">
+      <div className="w-full lg:w-1/2 flex flex-col justify-start pt-10 lg:pt-8 px-8 sm:px-12 lg:px-16 xl:px-20">
+        <div className="mb-8 lg:mb-20">
           <Image 
             src="/images/logonav.png" 
             alt="MagIo Logo" 
