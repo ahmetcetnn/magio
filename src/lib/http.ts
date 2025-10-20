@@ -1,5 +1,6 @@
 "use client";
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'react-toastify';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -18,16 +19,33 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 api.interceptors.response.use(
-  (res) => res,
+  (res: AxiosResponse) => {
+    try {
+      const method = (res.config?.method || '').toUpperCase();
+      const url = res.config?.url || '';
+      const headers = (res.config?.headers || {}) as Record<string, any>;
+      const suppressed = headers['x-suppress-toast'] === '1' || headers['x-suppress-toast'] === 1 || headers['x-suppress-toast'] === true;
+      const suppressList = ['/users/refresh-token'];
+      const isMutate = method && !['GET', 'HEAD', 'OPTIONS'].includes(method);
+      if (isMutate && !suppressed && !suppressList.some((p) => url?.includes(p))) {
+        const data: any = res.data;
+        const explicit = headers['x-success-message'];
+        const msg = explicit
+          || data?.message
+          || data?.result?.message
+          || data?.data?.message
+          || 'İşlem başarılı';
+        toast.success(String(msg));
+      }
+    } catch {}
+    return res;
+  },
   async (error: AxiosError) => {
     const original: any = error.config || {};
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
       try {
-        // Refresh using httpOnly refresh cookie and include current access token in body
-        let currentToken: string | null = null;
-        try { currentToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null; } catch {}
-        const refreshRes = await api.post('/users/refresh-token', currentToken ? { accessToken: currentToken } : {});
+        const refreshRes = await api.post('/users/refresh-token');
         const newToken = (refreshRes.data as any)?.accessToken
           || (refreshRes.data as any)?.token
           || (refreshRes.data as any)?.data?.accessToken
@@ -46,9 +64,24 @@ api.interceptors.response.use(
           return api(original);
         }
       } catch (e) {
-        // fallthrough to reject
       }
     }
+    try {
+      const method = (original?.method || '').toUpperCase();
+      const url = original?.url || '';
+      const headers = (original?.headers || {}) as Record<string, any>;
+      const suppressed = headers['x-suppress-toast'] === '1' || headers['x-suppress-toast'] === 1 || headers['x-suppress-toast'] === true || headers['x-suppress-error-toast'] === '1';
+      const suppressList = ['/users/refresh-token'];
+      const isMutate = method && !['GET', 'HEAD', 'OPTIONS'].includes(method);
+      if ((isMutate || (error.response?.status && error.response.status >= 400)) && !suppressed && !suppressList.some((p) => url?.includes(p))) {
+        const data: any = error.response?.data;
+        const msg = data?.message
+          || data?.error
+          || error.message
+          || 'İşlem başarısız';
+        toast.error(String(msg));
+      }
+    } catch {}
     return Promise.reject(error);
   }
 );

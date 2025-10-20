@@ -10,7 +10,7 @@ Features
 
 Routes
 - `/dashboard` main page (home redirects here)
-- `/api/dashboard/overview` placeholder API returning empty structures; replace with real backend soon
+	(Note) The previous placeholder API under `/api/dashboard/overview` has been removed.
 
 Develop
 ```bash
@@ -20,4 +20,4 @@ Open http://localhost:3000 and you should land on the Dashboard.
 
 Notes
 - Change locale/currency defaults inside `src/providers/settings-context.tsx` when needed.
-- Replace data source by editing `src/app/api/dashboard/overview/route.ts` or calling your backend.
+- Replace data source by wiring your backend calls inside the services in `src/services`.

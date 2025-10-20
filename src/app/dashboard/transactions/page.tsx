@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Sidebar from '../../../components/Sidebar';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import Topbar from '../../../components/Topbar';
@@ -25,9 +24,10 @@ type RecentTransactionsAPI = {
   };
 };
 
-async function fetchRecent(page: number, pageSize: number): Promise<Transaction[]> {
+async function fetchRecent(page: number, pageSize: number, signal?: AbortSignal): Promise<Transaction[]> {
   const res = await api.get<RecentTransactionsAPI>('/financial/transactions/recent', {
     params: { limit: pageSize, offset: (page - 1) * pageSize },
+    signal,
   });
   const payload: any = (res.data as any)?.data ?? res.data;
   return (payload?.transactions ?? []).map((t: any) => ({
@@ -42,21 +42,48 @@ async function fetchRecent(page: number, pageSize: number): Promise<Transaction[
 export default function TransactionsPage() {
   const pageSize = 15;
   const [page, setPage] = React.useState(1);
-  const { data, isLoading, isError } = useQuery<Transaction[]>({
-    queryKey: ['transactions', page, pageSize],
-    queryFn: () => fetchRecent(page, pageSize),
-    staleTime: 30_000,
-  });
+  const [items, setItems] = React.useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [authorized, setAuthorized] = React.useState<boolean | null>(null);
+
+  // Check token and redirect early
+  React.useEffect(() => {
+    try {
+      const t = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (!t) {
+        setAuthorized(false);
+        try { toast.error('An access token is required for authentication.'); } catch {}
+        setTimeout(() => { window.location.replace('/signin'); }, 0);
+        return;
+      }
+      setAuthorized(true);
+    } catch {
+      setAuthorized(false);
+      try { toast.error('An access token is required for authentication.'); } catch {}
+      setTimeout(() => { window.location.replace('/signin'); }, 0);
+    }
+  }, []);
+
+  const load = React.useCallback((p: number) => {
+    const controller = new AbortController();
+    setIsLoading(true);
+    fetchRecent(p, pageSize, controller.signal)
+      .then((data) => setItems(data))
+      .catch((e) => { if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load transactions'); })
+      .finally(() => setIsLoading(false));
+    return () => controller.abort();
+  }, []);
 
   React.useEffect(() => {
-    if (isError) toast.error('Failed to load transactions');
-  }, [isError]);
+    if (!authorized) return;
+    const cancel = load(page);
+    return () => { if (typeof cancel === 'function') cancel(); };
+  }, [page, load, authorized]);
 
-  const items: Transaction[] | [] = data ?? [];
+  if (authorized === false) return null;
 
   return (
     <DashboardLayout sidebar={<Sidebar />} topbar={<Topbar />}> 
-      <AuthGuard />
       <div className="grid grid-cols-1 gap-4">
         <RecentTransactions data={items as any} loading={isLoading} title="Transactions" />
         <div className="flex items-center justify-between">

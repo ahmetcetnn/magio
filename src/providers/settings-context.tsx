@@ -5,7 +5,7 @@ import currency from 'currency.js';
 
 type Settings = {
   locale: string;
-  currency: string; // ISO 4217 code e.g., USD, EUR, TRY
+  currency: string;
 };
 
 type SettingsContextType = Settings & {
@@ -32,16 +32,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const code = (desired || cur || '').toUpperCase();
       const sym = code === 'TRY' ? '₺' : code === 'USD' ? '$' : code === 'EUR' ? '€' : undefined;
       if (sym) {
-        // Format just the number per locale, then append currency symbol at the end
         const number = new Intl.NumberFormat(locale, {
-          // Hide cents: no fraction digits
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           ...opts,
         }).format(val);
         return `${number} ${sym}`;
       }
-      // Fallback to standard Intl currency formatting for other codes, also without fraction digits
       return new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: code || cur,

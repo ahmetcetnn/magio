@@ -11,7 +11,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-kumbh-sans);
   --font-mono: var(--font-geist-mono);
-  /* primary and brand overrides */
   --color-primary: var(--primary);
   --color-gray-900: #1B212D;
 }
@@ -27,4 +26,28 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-kumbh-sans), Arial, Helvetica, sans-serif;
+}
+
+.border,
+.border-t,
+.border-r,
+.border-b,
+.border-l,
+.border-x,
+.border-y { border-radius: 10px; }
+
+.border { border-width: 1px; }
+.border-t { border-top-width: 1px; }
+.border-r { border-right-width: 1px; }
+.border-b { border-bottom-width: 1px; }
+.border-l { border-left-width: 1px; }
+.border-x { border-left-width: 1px; border-right-width: 1px; }
+.border-y { border-top-width: 1px; border-bottom-width: 1px; }
+
+button:not(:disabled),
+[role="button"],
+a[href],
+label[for],
+summary {
+  cursor: pointer;
 }

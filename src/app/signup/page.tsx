@@ -7,9 +7,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useState, useEffect } from 'react'; // useRef'i sildim, gerek yok
+import { useState, useEffect } from 'react';
 
-// Validation schema (güncellendi: Password için yeni kurallar eklendi)
 const schema = yup.object().shape({
   fullName: yup.string().trim().required('Full name is required'),
   email: yup.string().trim().email('Invalid email').required('Email is required'),
@@ -32,8 +31,8 @@ export default function SignUpPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   
-  // useRef'leri sildim
 
   const {
     register,
@@ -41,14 +40,13 @@ export default function SignUpPage() {
     formState: { errors, isValid },
     reset,
     watch,
-    setFocus, // Bunu ekledim
+  setFocus,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
-    mode: 'onChange', // Bunu değiştirdim: anında validation için
+  mode: 'onChange',
     reValidateMode: 'onChange'
   });
 
-  // Watch form values for debugging (aynı)
   const watchedValues = watch();
   
   useEffect(() => {
@@ -57,7 +55,6 @@ export default function SignUpPage() {
     console.log('Form is valid:', isValid);
   }, [watchedValues, errors, isValid]);
 
-  // Focus on first error field when validation fails (ref'siz versiyon)
   useEffect(() => {
     if (errors.fullName) {
       setFocus('fullName');
@@ -66,11 +63,10 @@ export default function SignUpPage() {
     } else if (errors.password) {
       setFocus('password');
     }
-  }, [errors, setFocus]); // setFocus dependency ekledim
+  }, [errors, setFocus]);
 
-  const onSubmit = async (data: FormData) => { // Artık data undefined olmayacak
+  const onSubmit = async (data: FormData) => {
     console.log('Form submitted with data:', data);
-    // Gereksiz error kontrolünü sildim
     
     setIsLoading(true);
     
@@ -88,7 +84,6 @@ export default function SignUpPage() {
       if (response.status === 200 || response.status === 201) {
         setIsSuccess(true);
         toast.success('Account created successfully!');
-        // Başarıdan kısa süre sonra sign in sayfasına yönlendir
         setTimeout(() => {
           reset();
           router.push('/signin');
@@ -105,12 +100,22 @@ export default function SignUpPage() {
 
   const isDisabled = isLoading || isSuccess;
 
+  useEffect(() => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (token) {
+        setRedirecting(true);
+        router.replace('/dashboard');
+      }
+    } catch {}
+  }, [router]);
+
+  if (redirecting) return null;
+
   return (
     <div className="min-h-screen flex bg-white">
       
-      {/* Left Section - Form (aynı) */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 lg:px-16 xl:px-20">
-        {/* Logo (aynı) */}
         <div className="mb-12 lg:mb-16">
           <Image 
             src="/images/logonav.png" 
@@ -121,9 +126,7 @@ export default function SignUpPage() {
           />
         </div>
 
-        {/* Form (aynı header) */}
         <div className="space-y-6">
-          {/* Header */}
           <div className="space-y-2">
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
               Create new account
@@ -133,7 +136,6 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Form Fields */}
           <form 
             className="space-y-4" 
             onSubmit={handleSubmit(onSubmit, (errors) => {
@@ -141,28 +143,28 @@ export default function SignUpPage() {
               toast.error('Please fill in all required fields correctly.');
             })}
           >
-            {/* Full Name - ref'i sildim */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
               </label>
               <input
-                {...register('fullName')} // ref yok artık, RHF'nin ref'i çalışacak
+                {...register('fullName')}
                 type="text"
                 id="fullName"
                 placeholder="Mahfuzul Nabil"
                 disabled={isDisabled}
-                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
+                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 ${errors.fullName ? 'focus:ring-red-500' : 'focus:ring-lime-500'} focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
                   isDisabled ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
                 } ${errors.fullName ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
+                aria-invalid={errors.fullName ? 'true' : 'false'}
+                aria-describedby={errors.fullName ? 'fullName-error' : undefined}
                 style={{ borderRadius: '10px' }}
               />
               {errors.fullName && (
-                <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
+                <p id="fullName-error" className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
               )}
             </div>
 
-            {/* Email - ref'i sildim */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -173,17 +175,18 @@ export default function SignUpPage() {
                 id="email"
                 placeholder="example@gmail.com"
                 disabled={isDisabled}
-                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
+                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500' : 'focus:ring-lime-500'} focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
                   isDisabled ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
                 } ${errors.email ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
+                aria-invalid={errors.email ? 'true' : 'false'}
+                aria-describedby={errors.email ? 'email-error' : undefined}
                 style={{ borderRadius: '10px' }}
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email.message}</p>
               )}
             </div>
 
-            {/* Password - ref'i sildim */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -194,17 +197,18 @@ export default function SignUpPage() {
                 id="password"
                 placeholder="••••••••"
                 disabled={isDisabled}
-                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
+                className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500' : 'focus:ring-lime-500'} focus:border-transparent text-sm placeholder-gray-400 text-gray-900 ${
                   isDisabled ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
                 } ${errors.password ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
+                aria-invalid={errors.password ? 'true' : 'false'}
+                aria-describedby={errors.password ? 'password-error' : undefined}
                 style={{ borderRadius: '10px' }}
               />
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password.message}</p>
               )}
             </div>
 
-            {/* Create Account Button (aynı) */}
             <button
               type="submit"
               disabled={isDisabled}
@@ -230,7 +234,6 @@ export default function SignUpPage() {
             </button>
           </form>
 
-          {/* Google Sign Up (aynı) */}
           <div className="mt-2.5">
             <button 
               disabled={isDisabled}
@@ -249,7 +252,6 @@ export default function SignUpPage() {
             </button>
           </div>
 
-          {/* Sign In Link (aynı) */}
           <div className="text-center mt-6">
             <span className="text-sm text-gray-500">
               Already have an account?{' '}
@@ -257,7 +259,6 @@ export default function SignUpPage() {
                 <a href="/signin" className="text-black font-medium hover:underline">
                   Sign in
                 </a>
-                {/* Line Image positioned directly under "Sign in" */}
                 <div className="absolute left-0 right-0 mt-1 flex justify-center">
                   <Image
                     src="/images/line.png"
@@ -273,7 +274,6 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Right Section - Image (aynı) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-50 via-gray-100 to-pink-100 items-center justify-center p-0 relative">
         <Image
           src="/images/mainimg.png"

@@ -28,18 +28,18 @@ export function RecentTransactions({ data, loading, title = 'Recent Transaction'
             <thead>
               <tr className="text-left text-gray-500">
                 <th className="py-2 pr-4 font-medium">NAME/BUSINESS</th>
-                <th className="py-2 px-4 font-medium">TYPE</th>
-                <th className="py-2 px-4 font-medium text-right">AMOUNT</th>
-                <th className="py-2 pl-4 font-medium text-right">DATE</th>
+                <th className="py-2 px-4 font-medium text-center">TYPE</th>
+                <th className="py-2 px-4 font-medium text-center">AMOUNT</th>
+                <th className="py-2 pl-4 font-medium text-center">DATE</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {display.map((t) => (
                 <tr key={t.id}>
                   <td className="py-3 pr-4 text-gray-900 font-medium">{t.name}</td>
-                  <td className="py-3 px-4 text-gray-600">{t.type}</td>
-                  <td className="py-3 px-4 text-gray-900 font-semibold text-right">{formatMoney(t.amount)}</td>
-                  <td className="py-3 pl-4 text-gray-600 text-right whitespace-nowrap">{formatDate(t.date)}</td>
+                  <td className="py-3 px-4 text-gray-600 text-center">{t.type}</td>
+                  <td className="py-3 px-4 text-gray-900 font-semibold text-center">{formatMoney(t.amount)}</td>
+                  <td className="py-3 pl-4 text-gray-600 text-center whitespace-nowrap">{formatDate(t.date)}</td>
                 </tr>
               ))}
             </tbody>
@@ -85,7 +85,7 @@ export function ScheduledTransfers({ data, loading }: { data: Transfer[]; loadin
             <li key={t.id} className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">{t.name}</p>
-                <p className="text-xs text-gray-500">{formatDate(t.date)}</p>
+                <p className="text-xs text-gray-500 mt-2">{formatDate(t.date)}</p>
               </div>
               <p className="text-sm font-semibold text-gray-900">{formatMoney(t.amount)}</p>
             </li>

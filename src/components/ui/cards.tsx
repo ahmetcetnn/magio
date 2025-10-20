@@ -55,18 +55,6 @@ export function SummaryCard({
   );
 }
 
-export function WalletCard({ bank, masked, brand }: { bank: string; masked: string; brand: string }) {
-  return (
-    <div className="rounded-2xl relative overflow-hidden text-white p-5 bg-gray-800">
-      <p className="text-sm opacity-80 mb-6">{bank}</p>
-      <p className="tracking-widest text-lg font-medium">{masked}</p>
-      <div className="mt-8 flex items-center justify-between text-xs opacity-80">
-        <span>09/25</span>
-        <span className="uppercase">{brand}</span>
-      </div>
-    </div>
-  );
-}
 
 export function Section({ title, action }: { title: string; action?: React.ReactNode }) {
   return (

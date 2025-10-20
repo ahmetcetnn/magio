@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MagIo - Sign Up",
+  title: "MagIo",
   description: "Create your MagIo account",
 };
 

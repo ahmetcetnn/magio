@@ -3,6 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import ConfirmDialog from './ui/ConfirmDialog';
 
 const items = [
   { name: 'Dashboard', href: '/dashboard', iconSrc: '/icons/Dashboard.svg' },
@@ -19,12 +20,9 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Expose an opener for Topbar on mobile
   React.useEffect(() => {
-    // @ts-ignore
     (window as any).openMobileSidebar = () => setMobileOpen(true);
     return () => {
-      // @ts-ignore
       if ((window as any).openMobileSidebar) delete (window as any).openMobileSidebar;
     };
   }, []);
@@ -35,11 +33,9 @@ export default function Sidebar() {
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL;
       const url = base ? `${base}/users/logout` : '/users/logout';
-      // Fire-and-forget with keepalive so it continues during navigation
       fetch(url, { method: 'POST', credentials: 'include', keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
       toast.success('Logged out');
     } catch {
-      // ignore
     }
     try {
       localStorage.removeItem('accessToken');
@@ -53,34 +49,10 @@ export default function Sidebar() {
 
   return (
   <>
-    {/* Mobile top bar with hamburger */}
-    <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-100">
-      <div className="h-14 flex items-center justify-between px-4">
-        <button
-          type="button"
-          aria-label="Open menu"
-          aria-controls="mobile-sidebar"
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen(true)}
-          className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-400"
-        >
-          {/* Hamburger icon */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-        <Image src="/images/logonav.png" alt="MagIo" width={100} height={28} />
-        {/* Spacer to balance layout */}
-        <span className="w-10" />
-      </div>
-    </div>
 
-    {/* Mobile drawer */}
     {mobileOpen && (
       <div role="dialog" aria-modal="true" className="lg:hidden fixed inset-0 z-50">
-        {/* Overlay */}
         <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-        {/* Panel */}
         <div id="mobile-sidebar" className="relative z-10 h-full w-72 max-w-[85%] bg-[#FAFAFA] shadow-xl">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <Image src="/images/logonav.png" alt="MagIo" width={110} height={32} />
@@ -90,7 +62,6 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
               className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-400"
             >
-              {/* Close icon */}
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
@@ -137,7 +108,6 @@ export default function Sidebar() {
       </div>
     )}
 
-    {/* Desktop sidebar */}
     <aside className="hidden lg:flex sticky top-0 h-[100dvh] w-60 shrink-0 bg-[#FAFAFA] flex-col overflow-y-auto">
       <div className="p-5">
         <Image src="/images/logonav.png" alt="MagIo" width={110} height={32} />
@@ -151,7 +121,11 @@ export default function Sidebar() {
               <li key={it.name}>
                 <a
                   href={it.href}
-                  className={`flex items-center ${isDash ? 'gap-[12px]' : 'gap-3'} rounded-lg text-sm font-medium ${active ? 'text-gray-900' : 'text-[#929EAE]'} hover:bg-lime-100/50 hover:text-gray-900 aria-[current=true]:bg-lime-200 aria-[current=true]:text-gray-900 aria-[current=true]:font-semibold ${isDash ? 'w-[200px] pl-[15px] pr-[81px] py-[14px]' : 'px-3 py-2'}`}
+                  className={`flex items-center rounded-lg text-sm font-medium transition-all duration-150
+                    ${active ? 'gap-[12px]' : 'gap-3 hover:gap-[12px]'}
+                    ${active ? 'text-gray-900 bg-lime-200 font-semibold' : 'text-[#929EAE] hover:bg-lime-100/50 hover:text-gray-900'}
+                    ${active ? 'w-[200px] pl-[15px] pr-[81px] py-[14px]' : 'px-3 py-2 hover:w-[200px] hover:pl-[15px] hover:pr-[81px] hover:py-[14px]'}
+                  `}
                   aria-current={active ? 'true' : undefined}
                 >
                   <Image src={it.iconSrc} alt="" width={18} height={18} aria-hidden />
@@ -179,21 +153,16 @@ export default function Sidebar() {
         </ul>
       </div>
 
-      {showLogout && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 grid place-items-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowLogout(false)} />
-          <div className="relative z-10 w-[90%] max-w-sm rounded-xl bg-white p-5 shadow-lg">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Log out?</h3>
-            <p className="text-sm text-gray-600 mb-4">You will be redirected to the sign-in page.</p>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowLogout(false)} className="px-4 py-2 rounded-lg text-sm border border-gray-200 hover:bg-gray-50">Cancel</button>
-              <button type="button" onClick={handleLogout} disabled={isLoggingOut} className={`px-4 py-2 rounded-lg text-sm text-black ${isLoggingOut ? 'opacity-60 cursor-not-allowed' : ''}`} style={{ backgroundColor: '#C8EE44' }}>
-                {isLoggingOut ? 'Logging out…' : 'Yes, log out'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={showLogout}
+        title="Log out?"
+        description="You will be redirected to the sign-in page."
+        cancelText="Cancel"
+        confirmText={isLoggingOut ? 'Logging out…' : 'Yes'}
+        busy={isLoggingOut}
+        onClose={() => setShowLogout(false)}
+        onConfirm={handleLogout}
+      />
     </aside>
   </>
   );
