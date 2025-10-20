@@ -34,7 +34,7 @@ export default function WalletPanel({ loading, cards }: { loading: boolean; card
                       <img src="/icons/chip.png" alt="Chip" width={36} height={48} className="object-contain opacity-90" />
                       <img src="/icons/wifi.png" alt="Wi‑Fi" className="w-9 h-9 mr-2 opacity-80 object-contain" />
                     </div>
-                    <div className="absolute left-5 right-5 top[68%] font-semibold tracking-wide text-lg">
+                    <div className="absolute left-5 right-5 top-[68%] font-semibold tracking-wide text-lg">
                       {cards[0].cardNumber ?? cards[0].masked}
                     </div>
                   </div>
