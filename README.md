@@ -16,8 +16,6 @@ Develop
 ```bash
 npm run dev
 ```
-Open http://localhost:3000 and you should land on the Dashboard.
+Open http://localhost:3000 
 
-Notes
-- Change locale/currency defaults inside `src/providers/settings-context.tsx` when needed.
-- Replace data source by wiring your backend calls inside the services in `src/services`.
+
