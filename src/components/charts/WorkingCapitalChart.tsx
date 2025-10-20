@@ -104,6 +104,7 @@ export default function WorkingCapitalChart({
               contentStyle={{ borderRadius: 8 }}
               formatter={(value: any, name: string) => [formatMoney(value as number), name]}
               labelFormatter={(label) => safeFormat(label)}
+              labelStyle={{ color: '#1B212D' }}
             />
             <Line type="monotone" dataKey="income" stroke="#C8EE44" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="expenses" stroke="#94A3B8" strokeWidth={2} dot={false} />
