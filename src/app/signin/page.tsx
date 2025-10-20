@@ -14,7 +14,10 @@ type LoginForm = { email: string; password: string };
 
 const schema = yup.object({
   email: yup.string().trim().required('Email is required').email('Invalid email'),
-  password: yup.string().required('Password is required'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters'),
 });
 
 export default function SignInPage() {
@@ -145,6 +148,7 @@ export default function SignInPage() {
                 {...register('password')}
                 type="password"
                 id="password"
+                minLength={8}
                 placeholder="••••••••"
                 disabled={isLoading}
                 className={`w-full pl-5 pr-6 pt-4 pb-4 border focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500' : 'focus:ring-lime-500'} focus:border-transparent text-sm placeholder-gray-400 ${
