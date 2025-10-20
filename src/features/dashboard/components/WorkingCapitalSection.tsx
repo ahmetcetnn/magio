@@ -1,6 +1,6 @@
 import React from 'react';
-import WorkingCapitalChart from '../charts/WorkingCapitalChart';
-import { Skeleton } from '../ui/cards';
+import WorkingCapitalChart from '../../../components/charts/WorkingCapitalChart';
+import { Skeleton } from '../../../components/ui/cards';
 
 export default function WorkingCapitalSection({ loading, data }: { loading: boolean; data: { date: string; income: number; expenses: number }[] }) {
   return (

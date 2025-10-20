@@ -1,5 +1,5 @@
 import React from 'react';
-import { Skeleton } from '../ui/cards';
+import { Skeleton } from '../../../components/ui/cards';
 
 type Card = { bank: string; last4: string; brand: string; masked: string; exp: string; cardNumber?: string };
 
@@ -34,7 +34,7 @@ export default function WalletPanel({ loading, cards }: { loading: boolean; card
                       <img src="/icons/chip.png" alt="Chip" width={36} height={48} className="object-contain opacity-90" />
                       <img src="/icons/wifi.png" alt="Wi‑Fi" className="w-9 h-9 mr-2 opacity-80 object-contain" />
                     </div>
-                    <div className="absolute left-5 right-5 top-[68%] font-semibold tracking-wide text-lg">
+                    <div className="absolute left-5 right-5 top[68%] font-semibold tracking-wide text-lg">
                       {cards[0].cardNumber ?? cards[0].masked}
                     </div>
                   </div>
@@ -55,7 +55,6 @@ export default function WalletPanel({ loading, cards }: { loading: boolean; card
                       <img src="/icons/chip.png" alt="Chip" className="h-6 w-8 object-contain opacity-90" />
                       <img src="/icons/wifi.png" alt="Wi‑Fi" className="h-9 w-9 mr-4 object-contain opacity-80" />
                     </div>
-
                     <div className="mt-auto">
                       <div className="text-lg font-semibold tracking-wider">{cards[1].masked}</div>
                       <div className="mt-1 flex items-center justify-between">

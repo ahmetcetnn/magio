@@ -10,6 +10,7 @@ import api from '../lib/http';
 import { useAppDispatch } from '../store/hooks';
 import { fetchProfileStart, fetchProfileSuccess, fetchProfileError } from '../store/slices/userSlice';
 import { usePathname } from 'next/navigation';
+import QueryProvider from '../providers/query-provider';
 
 function ProfileBootstrapper() {
   const dispatch = useAppDispatch();
@@ -47,12 +48,14 @@ export default function ClientProviders({ children }: { children: React.ReactNod
   return (
     <Provider store={store}>
       <ProfileBootstrapper />
-      <SettingsProvider>
-        <ErrorBoundary>
-          {children}
-          <ToastContainer position="top-right" />
-        </ErrorBoundary>
-      </SettingsProvider>
+      <QueryProvider>
+        <SettingsProvider>
+          <ErrorBoundary>
+            {children}
+            <ToastContainer position="top-right" />
+          </ErrorBoundary>
+        </SettingsProvider>
+      </QueryProvider>
     </Provider>
   );
 }

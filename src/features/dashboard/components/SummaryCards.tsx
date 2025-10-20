@@ -1,6 +1,6 @@
 import React from 'react';
-import { SummaryCard, Skeleton } from '../ui/cards';
-import { useSettings } from '../../providers/settings-context';
+import { SummaryCard, Skeleton } from '../../../components/ui/cards';
+import { useSettings } from '../../../providers/settings-context';
 
 export default function SummaryCards({
   loading,

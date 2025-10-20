@@ -5,25 +5,20 @@ import { getFinancialSummary, getWorkingCapital, getWallet, getRecentTransaction
 import Sidebar from '../../components/Sidebar';
 import { toast } from 'react-toastify';
 import { useSettings } from '../../providers/settings-context';
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import DashboardLayout from '../../features/dashboard/layout/DashboardLayout';
 import Topbar from '../../components/Topbar';
-import SummaryCards from '../../components/dashboard/SummaryCards';
-import WorkingCapitalSection from '../../components/dashboard/WorkingCapitalSection';
-import WalletPanel from '../../components/dashboard/WalletPanel';
-import { RecentTransactions, ScheduledTransfers } from '../../components/lists/Transactions';
+import SummaryCards from '../../features/dashboard/components/SummaryCards';
+import WorkingCapitalSection from '../../features/dashboard/components/WorkingCapitalSection';
+import WalletPanel from '../../features/dashboard/components/WalletPanel';
+import { RecentTransactions, ScheduledTransfers } from '../../features/dashboard/components/TransactionsLists';
 import { useAppSelector } from '../../store/hooks';
+import { useQuery } from '@tanstack/react-query';
 
 export default function DashboardPage() {
   const { currency, setCurrency } = useSettings();
   const fullName = useAppSelector((s) => s.user.profile?.fullName);
 
   const [authorized, setAuthorized] = React.useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [summary, setSummary] = React.useState<Awaited<ReturnType<typeof getFinancialSummary>> | null>(null);
-  const [workingCapital, setWorkingCapital] = React.useState<Awaited<ReturnType<typeof getWorkingCapital>> | null>(null);
-  const [recentTx, setRecentTx] = React.useState<Awaited<ReturnType<typeof getRecentTransactions>> | null>(null);
-  const [scheduled, setScheduled] = React.useState<Awaited<ReturnType<typeof getScheduledTransfers>> | null>(null);
-  const [wallet, setWallet] = React.useState<Awaited<ReturnType<typeof getWallet>> | null>(null);
 
   React.useEffect(() => {
     try {
@@ -43,50 +38,51 @@ export default function DashboardPage() {
     }
   }, []);
 
-  React.useEffect(() => {
-    if (!authorized) return;
-    const controller = new AbortController();
-    setIsLoading(true);
-    (async () => {
-      try {
-        const [s, wc, rt, sch, w] = await Promise.all([
-          getFinancialSummary(controller.signal).catch((e) => {
-            if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load financial summary');
-            return null;
-          }),
-          getWorkingCapital(controller.signal).catch((e) => {
-            if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load working capital');
-            return null;
-          }),
-          getRecentTransactions(20, controller.signal).catch((e) => {
-            if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load recent transactions');
-            return null;
-          }),
-          getScheduledTransfers(controller.signal).catch((e) => {
-            if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load scheduled transfers');
-            return null;
-          }),
-          getWallet(controller.signal).catch((e) => {
-            if ((e as any)?.code !== 'ERR_CANCELED') toast.error('Failed to load wallet');
-            return null;
-          }),
-        ]);
-        if (s) setSummary(s);
-        if (wc) setWorkingCapital(wc);
-        if (rt) setRecentTx(rt);
-        if (sch) setScheduled(sch);
-        if (w) setWallet(w);
-        if (s?.currency && s.currency !== currency) setCurrency(s.currency);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-    return () => { controller.abort(); };
-  }, [authorized, setCurrency, currency]);
+  const summaryQuery = useQuery({
+    queryKey: ['financial-summary'],
+    queryFn: ({ signal }) => getFinancialSummary(signal as AbortSignal),
+    enabled: authorized === true,
+  });
 
-  const totals = summary?.totals ?? { balance: 0, spending: 0, saved: 0 };
-  const chartPoints = workingCapital?.points ?? [];
-  const cards = wallet?.cards ?? [];
+  const workingQuery = useQuery({
+    queryKey: ['working-capital'],
+    queryFn: ({ signal }) => getWorkingCapital(signal as AbortSignal),
+    enabled: authorized === true,
+  });
+
+  const recentQuery = useQuery({
+    queryKey: ['recent-transactions', 20],
+    queryFn: ({ signal }) => getRecentTransactions(20, signal as AbortSignal),
+    enabled: authorized === true,
+  });
+
+  const scheduledQuery = useQuery({
+    queryKey: ['scheduled-transfers'],
+    queryFn: ({ signal }) => getScheduledTransfers(signal as AbortSignal),
+    enabled: authorized === true,
+  });
+
+  const walletQuery = useQuery({
+    queryKey: ['wallet'],
+    queryFn: ({ signal }) => getWallet(signal as AbortSignal),
+    enabled: authorized === true,
+  });
+
+  const isLoading =
+    summaryQuery.isLoading ||
+    workingQuery.isLoading ||
+    recentQuery.isLoading ||
+    scheduledQuery.isLoading ||
+    walletQuery.isLoading;
+
+  React.useEffect(() => {
+    const s = summaryQuery.data;
+    if (s?.currency && s.currency !== currency) setCurrency(s.currency);
+  }, [summaryQuery.data, currency, setCurrency]);
+
+  const totals = summaryQuery.data?.totals ?? { balance: 0, spending: 0, saved: 0 };
+  const chartPoints = workingQuery.data?.points ?? [];
+  const cards = walletQuery.data?.cards ?? [];
 
   if (authorized === false) return null;
 
@@ -97,7 +93,7 @@ export default function DashboardPage() {
           <SummaryCards loading={isLoading} totals={totals} />
           <WorkingCapitalSection loading={isLoading} data={chartPoints} />
           <RecentTransactions
-            data={(recentTx?.items ?? []) as any}
+            data={(recentQuery.data?.items ?? []) as any}
             loading={isLoading}
             limit={3}
             action={
@@ -110,7 +106,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex flex-col gap-8">
           <WalletPanel loading={isLoading} cards={cards as any} />
-          <ScheduledTransfers data={((scheduled?.items ?? []) as any).map((t: any) => ({ ...t, amount: t.amount }))} loading={isLoading} />
+          <ScheduledTransfers data={((scheduledQuery.data?.items ?? []) as any).map((t: any) => ({ ...t, amount: t.amount }))} loading={isLoading} />
         </div>
       </div>
     </DashboardLayout>

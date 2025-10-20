@@ -50,9 +50,6 @@ export default function SignUpPage() {
   const watchedValues = watch();
   
   useEffect(() => {
-    console.log('Form values:', watchedValues);
-    console.log('Form errors:', errors);
-    console.log('Form is valid:', isValid);
   }, [watchedValues, errors, isValid]);
 
   useEffect(() => {
@@ -66,7 +63,6 @@ export default function SignUpPage() {
   }, [errors, setFocus]);
 
   const onSubmit = async (data: FormData) => {
-    console.log('Form submitted with data:', data);
     
     setIsLoading(true);
     
@@ -139,7 +135,6 @@ export default function SignUpPage() {
           <form 
             className="space-y-4" 
             onSubmit={handleSubmit(onSubmit, (errors) => {
-              console.log('Form validation errors:', errors);
               toast.error('Please fill in all required fields correctly.');
             })}
           >
